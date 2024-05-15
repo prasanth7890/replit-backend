@@ -18,3 +18,12 @@ app.get('/connect', (req, res)=>{
 // 5. close-inbrowser - closes the browser present inside the webapp
 // 5. opens-inbrowser - opens the browser present inside the webapp
 
+// core functional requirements
+// WORKING
+// - when a box created, code should copy from template/s3/github to the machine
+// also send curr file structure for fronend sidebar.
+
+// 1. create a folder codebox if is not existed, now create a folder inside codebox with boxname, 
+// 2. now go to the boxfolder, clone the respective repo form github to get initial code.
+// 3. install dependencies if any 
+// 4. send a message if everything worked out fine through websocket. else send an error event message
