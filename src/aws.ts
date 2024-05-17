@@ -24,12 +24,12 @@ const client = new S3Client({
 });
 
 
-//example - await getInitFiles( 'node' , join(__dirname , '..', 'codebox', "boxname"));
-export async function getInitFiles(template: string, localpath: string) {
+//example - await getInitFiles( boxid , join(__dirname , '..', 'codebox', "boxname"));
+export async function getInitFiles(boxId: string, localpath: string) {
   try {
     const input = {
       Bucket: process.env.BUCKET, // required
-      Prefix: `init/${template}`, // required - eg. bucket/node
+      Prefix: `code/${boxId}`, // required - eg. bucket/boxid
     };
 
     const command = new ListObjectsV2Command(input);
