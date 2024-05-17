@@ -1,8 +1,22 @@
 import express from 'express';
 import { initWs } from './ws';
+import { copyS3Folder } from './aws';
 
 const app = express();
+app.use(express.json());
 const httpServer = app.listen(3000, ()=>console.log('server started on port 3000'));
+
+app.post('/project', async (req, res)=> {
+    const {boxId, template} = req.body;
+    
+    if(!boxId || !template) {
+        res.status(400).send('Bad Request');
+        return;
+    }
+
+    await copyS3Folder(`init/${template}`, `code/${boxId}`);
+    res.send('New Project Created');
+})
 
 app.get('/connect', (req, res)=>{
     initWs(httpServer);  // initiates a websocket connection

@@ -4,7 +4,7 @@ export function initWs(httpServer:any) {
     const wss = new WebSocketServer({server: httpServer});
     wss.on('connection', (ws: WebSocket)=>{
         ws.on('error', console.error);
-    
+
         ws.send('a new connection established');
 
         socketHandlers(ws);
@@ -12,6 +12,10 @@ export function initWs(httpServer:any) {
 }
 
 function socketHandlers(ws:WebSocket) {
+    ws.on('close', ()=>{
+        console.log('socket closed');
+    });
+
     ws.on('message', (data:any)=>{
         const message = JSON.parse(data);
         if(message.event === 'newbox') {
