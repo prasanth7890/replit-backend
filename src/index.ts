@@ -13,15 +13,13 @@ app.post('/project', async (req, res)=> {
         res.status(400).send('Bad Request');
         return;
     }
-
+    
+    // check if boxid not in db.
     await copyS3Folder(`init/${template}`, `code/${boxId}`);
     res.send('New Project Created');
 })
 
-app.get('/connect', (req, res)=>{
-    initWs(httpServer);  // initiates a websocket connection
-    res.send('connection established');
-});
+initWs(httpServer);  // initiates a websocket connection
 
 // TODO:
 // 1. newbox - when a new box is creating...if its done, navigates to coding page else shows loading... on screen

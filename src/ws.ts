@@ -1,12 +1,15 @@
 import { WebSocket, WebSocketServer } from 'ws';
+import { getInitFiles } from './aws';
+import path from 'path';
 
 export function initWs(httpServer:any) {
     const wss = new WebSocketServer({server: httpServer});
-    wss.on('connection', (ws: WebSocket)=>{
+    wss.on('connection', async (ws: WebSocket, req)=>{
+        const boxId = req.url?.split('=')[1] || "";
         ws.on('error', console.error);
-
-        ws.send('a new connection established');
-
+        
+        await getInitFiles(boxId, path.join(__dirname, '..', 'codebox', boxId));
+        ws.send(JSON.stringify({event: 'loaded'}))
         socketHandlers(ws);
     });
 }
@@ -15,6 +18,9 @@ function socketHandlers(ws:WebSocket) {
     ws.on('close', ()=>{
         console.log('socket closed');
     });
+
+    // WORKING
+    // copy codebox folder from s3 to local machine and send the current folder structure to fronend via websocket
 
     ws.on('message', (data:any)=>{
         const message = JSON.parse(data);
