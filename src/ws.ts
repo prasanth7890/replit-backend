@@ -1,5 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { getInitFiles } from './aws';
+import { generateFileStructure } from './fs';
 import path from 'path';
 
 export function initWs(httpServer:any) {
@@ -9,7 +10,12 @@ export function initWs(httpServer:any) {
         ws.on('error', console.error);
         
         await getInitFiles(boxId, path.join(__dirname, '..', 'codebox', boxId));
-        ws.send(JSON.stringify({event: 'loaded'}))
+
+        const dirPath: string = path.join(__dirname, '..', 'codebox', boxId);
+        const fileStructure = await generateFileStructure(dirPath)
+
+        ws.send(JSON.stringify({event: 'loaded', data: fileStructure}));
+
         socketHandlers(ws);
     });
 }
@@ -19,17 +25,11 @@ function socketHandlers(ws:WebSocket) {
         console.log('socket closed');
     });
 
-    // WORKING
-    // copy codebox folder from s3 to local machine and send the current folder structure to fronend via websocket
-
     ws.on('message', (data:any)=>{
         const message = JSON.parse(data);
-        if(message.event === 'newbox') {
-            // copyCodeFromS3()
-            // install dependencies
-            //sends current file structure
-        }
-        else if(message.event === 'file-click') {
+        if(message.event === 'file-click') {
+            // WORKING
+
             //fires when clicked on file explorer.
             // if (file) {
             //     return fileContent
