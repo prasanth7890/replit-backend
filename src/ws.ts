@@ -1,15 +1,22 @@
 import { WebSocket, WebSocketServer } from 'ws';
-import { getInitFiles } from './aws';
+import { getInitFiles, isBoxPresentInS3 } from './aws';
 import { generateFileStructure } from './fs';
 import path from 'path';
+import fs from 'fs';
 
 export function initWs(httpServer:any) {
     const wss = new WebSocketServer({server: httpServer});
     wss.on('connection', async (ws: WebSocket, req)=>{
-        const boxId = req.url?.split('=')[1] || "";
         ws.on('error', console.error);
-        
-        await getInitFiles(boxId, path.join(__dirname, '..', 'codebox', boxId));
+
+        const boxId = req.url?.split('=')[1] || "";
+        const isPresent = await isBoxPresentInS3(boxId); 
+        if(isPresent) {
+            console.log(`boxId: ${boxId} already exists`);
+        }
+        else {
+            await getInitFiles(boxId, path.join(__dirname, '..', 'codebox', boxId));
+        }
 
         const dirPath: string = path.join(__dirname, '..', 'codebox', boxId);
         const fileStructure = await generateFileStructure(dirPath)
@@ -29,14 +36,12 @@ function socketHandlers(ws:WebSocket) {
         const message = JSON.parse(data);
         if(message.event === 'file-click') {
             // WORKING
-
-            //fires when clicked on file explorer.
-            // if (file) {
-            //     return fileContent
-            // }
-            // else {    
-            //     return files in the current folder 
-            // }
+            const filePath = message.data;
+            const fileName = filePath.split('\\').pop();  // `\` is for windows 
+            fs.readFile(filePath, "utf-8", (err, data)=> {
+                ws.send(JSON.stringify({event: 'file', data: data, name: fileName}));
+                console.log(`file content of ${fileName} sent succesfully`);
+            })
         }
         else if(message.event === 'coding') {
             // fires when user edits the opened file in editor
@@ -48,6 +53,10 @@ function socketHandlers(ws:WebSocket) {
             //take the keystrokes from frontend 
             //execute the command on server 
             // send the output to frontend 
+        }
+        else if(message.event === 'folder-click') {
+            // when clicked on folder, 
+            // sent that folder structure to fronend
         }
     });
 }

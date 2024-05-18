@@ -23,6 +23,7 @@ export function WriteFile(filePath: string, fileContent: string): Promise<void> 
 
 type resultType = {
     name?: string,
+    path?: string,
     isFolder?: boolean,
     items?: resultType[]
 }
@@ -30,6 +31,7 @@ type resultType = {
 export async function generateFileStructure(dirPath: string) {
   let result:resultType = {};
   result["name"] = path.basename(dirPath);
+  result["path"] = path.resolve(dirPath);
 
   const op = await isDirectory(dirPath);
   if(op === false) {
@@ -52,7 +54,7 @@ function readFiles(dirPath: string): Promise<resultType[]> {
       fs.readdir(dirPath, {withFileTypes:true}, (err:any, files:any)=>{
         const items: resultType[] = [];
         files?.map((file: any)=>{
-          items.push({name: file.name, isFolder: file.isDirectory()});
+          items.push({name: file.name, isFolder: file.isDirectory(), path: path.resolve(file.path, file.name)});
         });
         resolve(items);
       })

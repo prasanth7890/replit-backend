@@ -23,7 +23,6 @@ const client = new S3Client({
   },
 });
 
-
 //example - await getInitFiles( boxid , join(__dirname , '..', 'codebox', "boxname"));
 export async function getInitFiles(boxId: string, localpath: string) {
   try {
@@ -64,7 +63,6 @@ export async function getInitFiles(boxId: string, localpath: string) {
   }
 }
 
-
 // @example
 // source - init/node , destination - code/boxname
 export async function copyS3Folder(
@@ -93,9 +91,44 @@ export async function copyS3Folder(
           }
         })
       );
-      console.log(`Done Copying files from ${sourcePath} to ${destinationPath}`);
+      console.log(
+        `Done Copying files from ${sourcePath} to ${destinationPath}`
+      );
     }
   } catch (error) {
     console.log(error);
+  }
+}
+
+// returns true if the box is present in s3, else returns false
+// FIXME returning false even if the boxId is present in s3
+export async function isBoxPresentInS3(boxId: string): Promise<boolean> {
+  try {
+    const input = {
+      Bucket: process.env.BUCKET, // required - process.env.bucket
+      Prefix: "code/",
+      Delimiter: "/",
+    };
+
+    const command = new ListObjectsV2Command(input);
+    const response = await client.send(command);
+
+    let isPresent = false;
+    if (response.CommonPrefixes) {
+      for(const commonPrefix of response.CommonPrefixes) {
+        if (commonPrefix.Prefix) {
+          const folderName = commonPrefix.Prefix.split("/")[1];
+          if (folderName === boxId) {
+            isPresent = true;
+            break;
+          }
+        }
+      }
+    }
+
+    return isPresent;
+  } catch (error) {
+    console.log(error);
+    return true;
   }
 }
