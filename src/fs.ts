@@ -54,7 +54,12 @@ function readFiles(dirPath: string): Promise<resultType[]> {
       fs.readdir(dirPath, {withFileTypes:true}, (err:any, files:any)=>{
         const items: resultType[] = [];
         files?.map((file: any)=>{
-          items.push({name: file.name, isFolder: file.isDirectory(), path: path.resolve(file.path, file.name)});
+          if(file.isDirectory()) {
+            items.push({name: file.name, isFolder: file.isDirectory(), path: path.resolve(file.path, file.name), items: []});
+          }
+          else {
+            items.push({name: file.name, isFolder: file.isDirectory(), path: path.resolve(file.path, file.name)});
+          }
         });
         resolve(items);
       })

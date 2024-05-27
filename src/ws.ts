@@ -1,6 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { getInitFiles, isBoxPresentInS3 } from './aws';
-import { generateFileStructure } from './fs';
+import { generateFileStructure, WriteFile } from './fs';
 import path from 'path';
 import fs from 'fs';
 
@@ -32,22 +32,23 @@ function socketHandlers(ws:WebSocket) {
         console.log('socket closed');
     });
 
-    ws.on('message', (data:any)=>{
+    ws.on('message', async (data:any)=>{
         const message = JSON.parse(data);
         if(message.event === 'file-click') {
-            // WORKING
             const filePath = message.data;
             const fileName = filePath.split('\\').pop();  // `\` is for windows 
             fs.readFile(filePath, "utf-8", (err, data)=> {
-                ws.send(JSON.stringify({event: 'file', data: data, name: fileName}));
+                ws.send(JSON.stringify({event: 'file', data: data, name: fileName, path: filePath}));
                 console.log(`file content of ${fileName} sent succesfully`);
             })
         }
         else if(message.event === 'coding') {
-            // fires when user edits the opened file in editor
-            // add debouncing on fronend
-            // take the data coming from browser
-            // open the corresponding file and update it with this new data
+            const filePath = message.filePath;
+            const data = message.data;
+
+            await WriteFile(filePath, data);
+            // here whole file is being sent, and thats not good! 
+            // make it only send the modified parts of the file.
         }
         else if(message.event === 'terminal-write') {
             //take the keystrokes from frontend 
@@ -55,8 +56,10 @@ function socketHandlers(ws:WebSocket) {
             // send the output to frontend 
         }
         else if(message.event === 'folder-click') {
-            // when clicked on folder, 
-            // sent that folder structure to fronend
+            const dirPath = message.dirPath;
+            const fileStructure = await generateFileStructure(dirPath)
+            ws.send(JSON.stringify({event: 'folder', path: dirPath, data: fileStructure.items}));
+            console.log('sent folder structure');
         }
     });
 }
